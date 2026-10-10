@@ -11,6 +11,7 @@ export interface Meta {
   clusters: number
   levels: { light: number; moderate: number; heavy: number }
   version: string
+  replay?: { date: string; hour_utc: number }
 }
 
 export interface FireProps { frp: number; t: number; sat: string; conf: string; cluster: string | null }

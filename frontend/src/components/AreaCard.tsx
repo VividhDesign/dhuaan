@@ -28,6 +28,7 @@ function Sparkline({ series, color }: { series: number[]; color: string }) {
 
 export default function AreaCard({ bundle, frames, selected, onSelect }: Props) {
   const { t, lang } = useT()
+  const now = bundle.meta.generated_at
   const [q, setQ] = useState('')
   const [results, setResults] = useState<{ label: string; lat: number; lon: number }[]>([])
   const [locating, setLocating] = useState(false)
@@ -104,9 +105,9 @@ export default function AreaCard({ bundle, frames, selected, onSelect }: Props) 
           </div>
           {fc.arrival && (
             <dl className="grid grid-cols-3 gap-2 text-center">
-              <div className="rounded-lg bg-ink p-2"><dt className="text-[11px] text-gray-400">{t('arrives')}</dt><dd className="text-sm font-semibold">{hourLabel(fc.arrival, lang)}</dd></div>
-              <div className="rounded-lg bg-ink p-2"><dt className="text-[11px] text-gray-400">{t('heaviest')}</dt><dd className="text-sm font-semibold">{hourLabel(fc.peak.t, lang)}</dd></div>
-              <div className="rounded-lg bg-ink p-2"><dt className="text-[11px] text-gray-400">{t('clears')}</dt><dd className="text-sm font-semibold">{fc.clears ? hourLabel(fc.clears, lang) : '36 h+'}</dd></div>
+              <div className="rounded-lg bg-ink p-2"><dt className="text-[11px] text-gray-400">{t('arrives')}</dt><dd className="text-sm font-semibold">{hourLabel(fc.arrival, lang, now)}</dd></div>
+              <div className="rounded-lg bg-ink p-2"><dt className="text-[11px] text-gray-400">{t('heaviest')}</dt><dd className="text-sm font-semibold">{hourLabel(fc.peak.t, lang, now)}</dd></div>
+              <div className="rounded-lg bg-ink p-2"><dt className="text-[11px] text-gray-400">{t('clears')}</dt><dd className="text-sm font-semibold">{fc.clears ? hourLabel(fc.clears, lang, now) : '36 h+'}</dd></div>
             </dl>
           )}
           <Sparkline series={fc.series} color={LEVEL_COLOR[fc.level_24h === 'none' ? 'light' : fc.level_24h]} />

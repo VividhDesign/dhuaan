@@ -6,16 +6,25 @@ export const TG_BOT = (import.meta.env.VITE_TG_BOT as string | undefined) || ''
 export const MAP_STYLE_URL = (import.meta.env.VITE_MAP_STYLE_URL as string | undefined) ||
   'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'
 
-async function get<T>(name: string): Promise<T> {
-  const r = await fetch(`${DATA_URL}/${name}`, { cache: 'no-cache' })
+export const REPLAY_URL = DATA_URL.replace(/\/latest$/, '/replay')
+
+export function replayDate(): string | null {
+  const d = new URLSearchParams(location.search).get('replay')
+  return d && /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : null
+}
+
+async function get<T>(name: string, base = DATA_URL): Promise<T> {
+  const r = await fetch(`${base}/${name}`, { cache: 'no-cache' })
   if (!r.ok) throw new Error(`${name}: HTTP ${r.status}`)
   return r.json() as Promise<T>
 }
 
-export async function loadBundle(): Promise<Bundle> {
+export async function loadBundle(replay: string | null = null): Promise<Bundle> {
+  const base = replay ? `${REPLAY_URL}/${replay}` : DATA_URL
   const [meta, fires, trails, smoke, places, hotspots, advice] = await Promise.all([
-    get<Meta>('meta.json'), get<FiresGeo>('fires.geojson'), get<Trails>('trails.json'), get<Smoke>('smoke.json'),
-    get<PlaceForecast[]>('places.json'), get<Hotspots>('hotspots.json'), get<Advice>('advice.json'),
+    get<Meta>('meta.json', base), get<FiresGeo>('fires.geojson', base), get<Trails>('trails.json', base),
+    get<Smoke>('smoke.json', base), get<PlaceForecast[]>('places.json', base), get<Hotspots>('hotspots.json', base),
+    get<Advice>('advice.json', base),
   ])
   return { meta, fires, trails, smoke, places, hotspots, advice }
 }

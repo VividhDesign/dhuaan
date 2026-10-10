@@ -28,6 +28,11 @@ export default function LiveMap({ bundle, frames }: { bundle: Bundle; frames: Ui
         onPick={(lat, lon) => { setSelected({ lat, lon }); setSheetOpen(true) }} />
 
       <div className="pointer-events-none absolute left-3 top-3 z-10 max-w-[75%] rounded-lg bg-ink/80 px-3 py-2 text-[11px] text-gray-300 backdrop-blur sm:text-xs">
+        {m.replay && (
+          <div className="mb-1 rounded bg-violet-600/30 px-2 py-1 font-semibold text-violet-100">
+            ⏪ {lang === 'hi' ? `रीप्ले: ${m.replay.date} की असली आग और हवा` : `Replay: real fires & winds of ${m.replay.date}`} · {lang === 'hi' ? 'पूर्वानुमान का समय' : 'forecast made'} {clock(m.generated_at)}
+          </div>
+        )}
         <div><span className="text-base font-bold text-fire">🔥 {m.fires_24h}</span> {t('fires24')}</div>
         <div className="mt-0.5 text-gray-400">{t('updated')} {clock(m.generated_at)}{m.last_pass_utc ? ` · ${t('lastPass')} ${clock(m.last_pass_utc)}` : ''}</div>
         <div className="mt-1 flex gap-3 text-gray-400">

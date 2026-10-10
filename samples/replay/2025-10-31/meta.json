@@ -1,0 +1,1 @@
+{"run_id":"20251031T1500Z","generated_at":1761922800,"last_pass_utc":1761899220,"wind_source":"GFS archive via Open-Meteo (replay)","fires_24h":1209,"clusters":400,"levels":{"light":15,"moderate":35,"heavy":60},"version":"1.0","compute_s":1.04,"replay":{"date":"2025-10-31","hour_utc":15}}

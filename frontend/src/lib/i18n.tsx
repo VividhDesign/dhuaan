@@ -26,6 +26,7 @@ const S = {
   pause: { en: 'Pause', hi: 'रोकें' },
   map: { en: 'Map', hi: 'नक्शा' },
   hotspots: { en: 'Hotspots', hi: 'हॉटस्पॉट' },
+  replay: { en: 'Replay', hi: 'रीप्ले' },
   about: { en: 'About', hi: 'जानकारी' },
   relative: { en: 'Smoke Index is relative (0–100), not a PM2.5 reading.', hi: 'स्मोक इंडेक्स तुलनात्मक (0–100) है, PM2.5 माप नहीं।' },
   loading: { en: 'Loading the latest satellite fires…', hi: 'ताज़ा सैटेलाइट डेटा लोड हो रहा है…' },

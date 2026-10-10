@@ -9,6 +9,7 @@ from datetime import datetime
 import numpy as np
 
 OPEN_METEO = "https://api.open-meteo.com/v1/forecast"
+OPEN_METEO_HISTORICAL = "https://historical-forecast-api.open-meteo.com/v1/forecast"
 HOURLY_VARS = [
     "wind_speed_10m", "wind_direction_10m",
     "wind_speed_925hPa", "wind_direction_925hPa",
@@ -82,18 +83,23 @@ def _parse_time(s: str) -> int:
 
 
 def fetch_open_meteo(lats: list[float], lons: list[float], past_days: int = 1, forecast_days: int = 2,
-                     timeout: int = 60) -> list[dict]:
-    """One request for many points (Open-Meteo multi-location). Returns one dict per point."""
+                     timeout: int = 60, start_date: str | None = None, end_date: str | None = None) -> list[dict]:
+    """One request for many points (Open-Meteo multi-location). Returns one dict per point.
+
+    With start_date/end_date it uses the historical-forecast archive (for replays and backtests).
+    """
     out = []
+    base = OPEN_METEO_HISTORICAL if start_date else OPEN_METEO
+    span = {"start_date": start_date, "end_date": end_date} if start_date else \
+        {"past_days": past_days, "forecast_days": forecast_days}
     for i in range(0, len(lats), 50):  # keep URLs a sane length
         q = urllib.parse.urlencode({
             "latitude": ",".join(f"{x:.2f}" for x in lats[i:i + 50]),
             "longitude": ",".join(f"{x:.2f}" for x in lons[i:i + 50]),
             "hourly": ",".join(HOURLY_VARS),
-            "wind_speed_unit": "ms", "timezone": "GMT",
-            "past_days": past_days, "forecast_days": forecast_days,
+            "wind_speed_unit": "ms", "timezone": "GMT", **span,
         })
-        with urllib.request.urlopen(f"{OPEN_METEO}?{q}", timeout=timeout) as r:
+        with urllib.request.urlopen(f"{base}?{q}", timeout=timeout) as r:
             data = json.loads(r.read().decode("utf-8"))
         out.extend(data if isinstance(data, list) else [data])
     return out

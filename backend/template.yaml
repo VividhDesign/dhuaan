@@ -257,6 +257,9 @@ Resources:
         Data:
           Type: HttpApi
           Properties: { ApiId: !Ref HttpApi, Path: "/data/latest/{name}", Method: GET }
+        ReplayData:
+          Type: HttpApi
+          Properties: { ApiId: !Ref HttpApi, Path: "/data/replay/{date}/{name}", Method: GET }
 
   # ---------- maps ----------
   MapsKey:

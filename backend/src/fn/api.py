@@ -64,6 +64,23 @@ def data(name: str):
                     headers={"Cache-Control": "public, max-age=60", "Access-Control-Allow-Origin": "*"})
 
 
+DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+
+@app.get("/data/replay/<date>/<name>")
+def replay_data(date: str, name: str):
+    if not (DATE_RE.match(date) or date == "index") or (date != "index" and name not in DATA_FILES):
+        return bad("not found", 404)
+    key = "public/replay/index.json" if date == "index" else f"public/replay/{date}/{name}"
+    try:
+        obj = s3().get_object(Bucket=BUCKET, Key=key)
+    except s3().exceptions.NoSuchKey:
+        return bad("not found", 404)
+    return Response(status_code=200, content_type="application/json; charset=utf-8",
+                    body=obj["Body"].read().decode("utf-8"),
+                    headers={"Cache-Control": "public, max-age=3600", "Access-Control-Allow-Origin": "*"})
+
+
 @app.get("/api/places")
 def places():
     q = (app.current_event.get_query_string_value("q") or "").strip()

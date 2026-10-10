@@ -12,7 +12,8 @@ export default function Header() {
         <span className="hidden text-xs text-gray-400 sm:inline">{t('tagline')}</span>
       </NavLink>
       <nav className="flex items-center gap-1">
-        <NavLink to="/" end className={link}>{t('map')}</NavLink>
+        <a href="/" className={`px-2 py-1.5 rounded-md text-sm whitespace-nowrap ${location.pathname === '/' && !new URLSearchParams(location.search).has('replay') ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white'}`}>{t('map')}</a>
+        <a href="/?replay=2025-10-31" className={`px-2 py-1.5 rounded-md text-sm whitespace-nowrap ${new URLSearchParams(location.search).has('replay') ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white'}`}>⏪ {t('replay')}</a>
         <NavLink to="/hotspots" className={link}>{t('hotspots')}</NavLink>
         <NavLink to="/about" className={link}>{t('about')}</NavLink>
         <button onClick={() => setLang(lang === 'en' ? 'hi' : 'en')}
