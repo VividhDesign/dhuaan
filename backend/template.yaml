@@ -1,0 +1,267 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Dhuaan — a weather forecast for smoke (NASA FIRMS fires + winds -> Smoke Index -> alerts)
+
+Parameters:
+  SiteUrl:
+    Type: String
+    Default: ""
+    Description: Public URL of the web app (used for links in alerts)
+
+Globals:
+  Function:
+    Runtime: python3.12
+    Architectures: [arm64]
+    CodeUri: src/
+    MemorySize: 512
+    Timeout: 60
+    LoggingConfig:
+      LogFormat: JSON
+    Environment:
+      Variables:
+        BUCKET: !Ref DataBucket
+        TABLE: !Ref Table
+        ALERTS_TOPIC: !Ref AlertsTopic
+        SITE_URL: !Ref SiteUrl
+        POWERTOOLS_SERVICE_NAME: dhuaan
+        POWERTOOLS_LOG_LEVEL: INFO
+
+Resources:
+  # ---------- storage ----------
+  DataBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: expire-run-artifacts
+            Status: Enabled
+            Prefix: runs/
+            ExpirationInDays: 30
+
+  Table:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - { AttributeName: pk, AttributeType: S }
+        - { AttributeName: sk, AttributeType: S }
+      KeySchema:
+        - { AttributeName: pk, KeyType: HASH }
+        - { AttributeName: sk, KeyType: RANGE }
+      TimeToLiveSpecification:
+        AttributeName: expires_at
+        Enabled: true
+
+  AlertsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: dhuaan-alerts
+      DisplayName: Dhuaan
+
+  # ---------- public data via CloudFront ----------
+  DataOAC:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub "${AWS::StackName}-data-oac"
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  DataCdn:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: Dhuaan public forecast data
+        PriceClass: PriceClass_200
+        Origins:
+          - Id: data
+            DomainName: !GetAtt DataBucket.RegionalDomainName
+            OriginPath: /public
+            OriginAccessControlId: !GetAtt DataOAC.Id
+            S3OriginConfig:
+              OriginAccessIdentity: ""
+        DefaultCacheBehavior:
+          TargetOriginId: data
+          ViewerProtocolPolicy: redirect-to-https
+          Compress: true
+          AllowedMethods: [GET, HEAD, OPTIONS]
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6        # Managed-CachingOptimized (honours origin max-age)
+          ResponseHeadersPolicyId: 60669652-455b-4ae9-85a4-c4c02393f86c # Managed-SimpleCORS
+
+  DataBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref DataBucket
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal: { Service: cloudfront.amazonaws.com }
+            Action: s3:GetObject
+            Resource: !Sub "${DataBucket.Arn}/public/*"
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${DataCdn}"
+
+  # ---------- pipeline ----------
+  FetchFiresFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: fn.fetch_fires.handler
+      Policies:
+        - S3CrudPolicy: { BucketName: !Ref DataBucket }
+
+  FetchWindsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: fn.fetch_winds.handler
+      Policies:
+        - S3CrudPolicy: { BucketName: !Ref DataBucket }
+
+  ModelFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: fn.model.handler
+      MemorySize: 2048
+      Timeout: 300
+      Policies:
+        - S3CrudPolicy: { BucketName: !Ref DataBucket }
+
+  AlertsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: fn.alerts.handler
+      Timeout: 120
+      Policies:
+        - S3ReadPolicy: { BucketName: !Ref DataBucket }
+        - DynamoDBCrudPolicy: { TableName: !Ref Table }
+        - SNSPublishMessagePolicy: { TopicName: !GetAtt AlertsTopic.TopicName }
+        - SSMParameterReadPolicy: { ParameterName: "dhuaan/*" }
+        - Statement:
+            - Effect: Allow
+              Action: kms:Decrypt
+              Resource: "*"
+              Condition:
+                StringEquals:
+                  kms:ViaService: !Sub "ssm.${AWS::Region}.amazonaws.com"
+      Events:
+        DailySchool:
+          Type: ScheduleV2
+          Properties:
+            ScheduleExpression: cron(30 6 * * ? *)
+            ScheduleExpressionTimezone: Asia/Kolkata
+            Input: '{"mode": "daily_school"}'
+        DailyResident:
+          Type: ScheduleV2
+          Properties:
+            ScheduleExpression: cron(0 7 * * ? *)
+            ScheduleExpressionTimezone: Asia/Kolkata
+            Input: '{"mode": "daily_resident"}'
+        DailyOfficial:
+          Type: ScheduleV2
+          Properties:
+            ScheduleExpression: cron(0 8 * * ? *)
+            ScheduleExpressionTimezone: Asia/Kolkata
+            Input: '{"mode": "daily_official"}'
+
+  Pipeline:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: statemachine/pipeline.asl.json
+      DefinitionSubstitutions:
+        FetchFiresArn: !GetAtt FetchFiresFunction.Arn
+        FetchWindsArn: !GetAtt FetchWindsFunction.Arn
+        ModelArn: !GetAtt ModelFunction.Arn
+        AlertsArn: !GetAtt AlertsFunction.Arn
+      Policies:
+        - LambdaInvokePolicy: { FunctionName: !Ref FetchFiresFunction }
+        - LambdaInvokePolicy: { FunctionName: !Ref FetchWindsFunction }
+        - LambdaInvokePolicy: { FunctionName: !Ref ModelFunction }
+        - LambdaInvokePolicy: { FunctionName: !Ref AlertsFunction }
+      Events:
+        Every3Hours:
+          Type: ScheduleV2
+          Properties:
+            ScheduleExpression: rate(3 hours)
+
+  # ---------- HTTP API ----------
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration:
+        AllowOrigins: ["*"]
+        AllowMethods: [GET, POST, OPTIONS]
+        AllowHeaders: [content-type]
+      DefaultRouteSettings:
+        ThrottlingBurstLimit: 20
+        ThrottlingRateLimit: 10
+
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: fn.api.handler
+      Timeout: 29
+      Environment:
+        Variables:
+          PIPELINE_ARN: !Ref Pipeline
+      Policies:
+        - S3ReadPolicy: { BucketName: !Ref DataBucket }
+        - DynamoDBCrudPolicy: { TableName: !Ref Table }
+        - SSMParameterReadPolicy: { ParameterName: "dhuaan/*" }
+        - Statement:
+            - Effect: Allow
+              Action: kms:Decrypt
+              Resource: "*"
+              Condition:
+                StringEquals:
+                  kms:ViaService: !Sub "ssm.${AWS::Region}.amazonaws.com"
+            - Effect: Allow
+              Action: sns:Subscribe
+              Resource: !Ref AlertsTopic
+            - Effect: Allow
+              Action: [geo-places:Geocode, geo-places:Autocomplete, geo-places:ReverseGeocode]
+              Resource: !Sub "arn:aws:geo-places:${AWS::Region}::provider/default"
+            - Effect: Allow
+              Action: states:StartExecution
+              Resource: !Ref Pipeline
+      Events:
+        Places:
+          Type: HttpApi
+          Properties: { ApiId: !Ref HttpApi, Path: /api/places, Method: GET }
+        SubscribeEmail:
+          Type: HttpApi
+          Properties: { ApiId: !Ref HttpApi, Path: /api/subscribe/email, Method: POST }
+        TelegramWebhook:
+          Type: HttpApi
+          Properties: { ApiId: !Ref HttpApi, Path: /api/telegram/webhook, Method: POST }
+        RunNow:
+          Type: HttpApi
+          Properties: { ApiId: !Ref HttpApi, Path: /api/run, Method: POST }
+
+  # ---------- maps ----------
+  MapsKey:
+    Type: AWS::Location::APIKey
+    Properties:
+      KeyName: !Sub "${AWS::StackName}-maps"
+      NoExpiry: true
+      Restrictions:
+        AllowActions: ["geo-maps:GetTile", "geo-maps:GetStaticMap"]
+        AllowResources: [!Sub "arn:aws:geo-maps:${AWS::Region}::provider/default"]
+
+Outputs:
+  ApiUrl:
+    Value: !Sub "https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+  DataUrl:
+    Value: !Sub "https://${DataCdn.DomainName}"
+  PipelineArn:
+    Value: !Ref Pipeline
+  BucketName:
+    Value: !Ref DataBucket
+  MapsKeyName:
+    Value: !Sub "${AWS::StackName}-maps"

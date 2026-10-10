@@ -1,0 +1,49 @@
+{
+  "Comment": "Dhuaan: fetch fires + winds -> model -> alerts (runs every 3 hours)",
+  "StartAt": "Init",
+  "States": {
+    "Init": {
+      "Type": "Pass",
+      "Parameters": {"run_id.$": "$$.Execution.Name"},
+      "Next": "Fetch"
+    },
+    "Fetch": {
+      "Type": "Parallel",
+      "Branches": [
+        {"StartAt": "FetchFires", "States": {"FetchFires": {
+          "Type": "Task", "Resource": "arn:aws:states:::lambda:invoke",
+          "Parameters": {"FunctionName": "${FetchFiresArn}", "Payload": {"run_id.$": "$.run_id"}},
+          "OutputPath": "$.Payload",
+          "Retry": [{"ErrorEquals": ["States.ALL"], "IntervalSeconds": 20, "MaxAttempts": 2, "BackoffRate": 2}],
+          "End": true}}},
+        {"StartAt": "FetchWinds", "States": {"FetchWinds": {
+          "Type": "Task", "Resource": "arn:aws:states:::lambda:invoke",
+          "Parameters": {"FunctionName": "${FetchWindsArn}", "Payload": {"run_id.$": "$.run_id"}},
+          "OutputPath": "$.Payload",
+          "Retry": [{"ErrorEquals": ["States.ALL"], "IntervalSeconds": 20, "MaxAttempts": 2, "BackoffRate": 2}],
+          "End": true}}}
+      ],
+      "ResultSelector": {"fires.$": "$[0]", "winds.$": "$[1]"},
+      "ResultPath": "$.fetched",
+      "Next": "Model"
+    },
+    "Model": {
+      "Type": "Task", "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {"FunctionName": "${ModelArn}",
+                     "Payload": {"run_id.$": "$.run_id", "fires.$": "$.fetched.fires", "winds.$": "$.fetched.winds"}},
+      "ResultSelector": {"summary.$": "$.Payload"},
+      "ResultPath": "$.model",
+      "Retry": [{"ErrorEquals": ["Lambda.ServiceException", "Lambda.TooManyRequestsException"], "IntervalSeconds": 10, "MaxAttempts": 2}],
+      "Next": "Alerts"
+    },
+    "Alerts": {
+      "Type": "Task", "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {"FunctionName": "${AlertsArn}", "Payload": {"mode": "run"}},
+      "ResultSelector": {"summary.$": "$.Payload"},
+      "ResultPath": "$.alerts",
+      "Catch": [{"ErrorEquals": ["States.ALL"], "ResultPath": "$.alerts_error", "Next": "Done"}],
+      "Next": "Done"
+    },
+    "Done": {"Type": "Succeed"}
+  }
+}
