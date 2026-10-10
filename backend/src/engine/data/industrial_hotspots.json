@@ -1,0 +1,6 @@
+{"note": "Persistent non-agricultural thermal anomalies (refinery flares etc.). Approximate; P1 adds an automatic persistence filter.",
+ "radius_km": 3.0,
+ "sites": [
+  {"name": "Panipat refinery (IOCL)", "lat": 29.48, "lon": 76.90},
+  {"name": "Bathinda refinery (HMEL)", "lat": 30.10, "lon": 74.96}
+ ]}

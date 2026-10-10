@@ -1,0 +1,20 @@
+{
+  "source_domain": {"lon_min": 72.5, "lon_max": 78.5, "lat_min": 27.5, "lat_max": 32.6},
+  "wind_grid": {"lon0": 72.5, "lat0": 27.5, "d": 0.5, "nx": 13, "ny": 11},
+  "receptor_grid": {"lon0": 74.0, "lat0": 27.6, "d": 0.1, "nx": 45, "ny": 42},
+  "forecast_hours": 36,
+  "cluster_cell_deg": {"value": 0.1, "source": "design choice (~11 km)"},
+  "release_hours": {"value": 6, "low": 3, "high": 10, "source": "assumption: afternoon/evening burning after the ~13:30 VIIRS pass", "confidence": "approx"},
+  "dt_minutes": 15,
+  "sigma0_km": {"value": 5.0, "low": 2.0, "high": 10.0, "source": "assumption: initial puff width", "confidence": "approx"},
+  "sigma_growth_km_per_h": {"value": 3.0, "low": 1.5, "high": 6.0, "source": "assumption: regional plume spread", "confidence": "approx"},
+  "sigma_max_km": 80.0,
+  "decay_hours": {"value": 24.0, "low": 12.0, "high": 48.0, "source": "assumption: dilution/deposition e-folding", "confidence": "approx"},
+  "transport_level": "925hPa",
+  "wind_10m_scale": 1.3,
+  "stagnation": {"enabled": true, "blh_ref_m": 800.0, "min": 0.5, "max": 3.0},
+  "reference_scenario": {"frp_mw": 1000.0, "distance_km": 150.0, "wind_ms": 5.0, "target_peak": 80.0},
+  "levels": {"light": 15, "moderate": 35, "heavy": 60},
+  "max_clusters": 400,
+  "max_trails": 2400
+}

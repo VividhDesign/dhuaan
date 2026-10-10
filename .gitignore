@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.aws-sam/
+.env
+.env.*
+!.env.example
+__pycache__/
+*.pyc
+.pytest_cache/
+*.zip
+PLAN*.md
+PROGRESS.md
+private/
+.DS_Store
+samples/live/
+.venv/

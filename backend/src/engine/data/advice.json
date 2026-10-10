@@ -1,0 +1,30 @@
+{
+  "_source": "Generic protective steps in line with public smoke/air-pollution advisories (CPCB, MoHFW). Not medical advice. VERIFY wording against the latest MoHFW advisory.",
+  "resident": {
+    "none": {"en": ["No farm-fire smoke expected in your area."], "hi": ["आपके इलाक़े में खेतों की आग का धुआँ आने की उम्मीद नहीं है।"]},
+    "light": {
+      "en": ["Light smoke possible — sensitive people should limit long outdoor exercise during these hours.", "Keep an eye on updates."],
+      "hi": ["हल्का धुआँ आ सकता है — संवेदनशील लोग इन घंटों में बाहर लंबी कसरत कम करें।", "अपडेट देखते रहें।"]
+    },
+    "moderate": {
+      "en": ["Close windows before the smoke arrives.", "Move morning walks and outdoor exercise to after it clears.", "Run an air purifier if you have one."],
+      "hi": ["धुआँ आने से पहले खिड़कियाँ बंद कर लें।", "सुबह की सैर और बाहर की कसरत धुआँ छँटने के बाद करें।", "एयर प्यूरीफ़ायर हो तो चला लें।"]
+    },
+    "heavy": {
+      "en": ["Keep children, elderly and anyone with asthma indoors during these hours.", "Close windows and doors; run a purifier if you have one.", "If you must go out, wear a well-fitted N95. People with lung or heart conditions: follow your doctor's advice."],
+      "hi": ["इन घंटों में बच्चों, बुज़ुर्गों और दमा के मरीज़ों को घर के अंदर रखें।", "खिड़की-दरवाज़े बंद रखें; प्यूरीफ़ायर हो तो चलाएँ।", "बाहर जाना ज़रूरी हो तो ठीक से फ़िट N95 मास्क पहनें। फेफड़े या दिल के मरीज़ अपने डॉक्टर की सलाह मानें।"]
+    }
+  },
+  "school": {
+    "none": {"en": ["Outdoor assembly and PE are fine as far as farm-fire smoke goes."], "hi": ["खेतों की आग के धुएँ के हिसाब से बाहर प्रार्थना सभा और खेल ठीक हैं।"]},
+    "light": {"en": ["Outdoor activities OK; keep children with asthma indoors during the smoky hours."], "hi": ["बाहर की गतिविधियाँ ठीक हैं; धुएँ वाले घंटों में दमा वाले बच्चों को अंदर रखें।"]},
+    "moderate": {"en": ["Hold assembly indoors during the smoky hours.", "Move PE indoors or after the smoke clears."], "hi": ["धुएँ वाले घंटों में प्रार्थना सभा अंदर करें।", "खेल-कूद अंदर करें या धुआँ छँटने के बाद।"]},
+    "heavy": {"en": ["Assembly and PE indoors today.", "Keep windows closed in classrooms during the smoky hours.", "Inform parents of children with asthma."], "hi": ["आज प्रार्थना सभा और खेल-कूद अंदर ही करें।", "धुएँ वाले घंटों में कक्षाओं की खिड़कियाँ बंद रखें।", "दमा वाले बच्चों के अभिभावकों को सूचित करें।"]}
+  },
+  "official": {
+    "none": {"en": ["No significant smoke transport toward populated areas in the next 24 h."], "hi": ["अगले 24 घंटे में आबादी वाले इलाक़ों की ओर ख़ास धुआँ नहीं।"]},
+    "light": {"en": ["Watch the top-ranked clusters; light smoke expected downwind."], "hi": ["ऊपर के क्लस्टर पर नज़र रखें; हवा की दिशा में हल्का धुआँ।"]},
+    "moderate": {"en": ["Prioritise the top-ranked clusters for crop-residue machinery and field visits."], "hi": ["फ़सल अवशेष मशीनें और फ़ील्ड टीमें पहले ऊपर के क्लस्टर में भेजें।"]},
+    "heavy": {"en": ["Heavy smoke expected over populated areas: act on the top 25 clusters first.", "Alert schools and hospitals in the affected areas."], "hi": ["आबादी वाले इलाक़ों पर घना धुआँ: पहले ऊपर के 25 क्लस्टर पर कार्रवाई करें।", "प्रभावित इलाक़ों के स्कूल और अस्पतालों को सूचित करें।"]}
+  }
+}
