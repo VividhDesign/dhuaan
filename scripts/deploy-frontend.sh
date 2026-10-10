@@ -5,7 +5,7 @@ cd "$(dirname "$0")/../frontend"
 out() { aws cloudformation describe-stacks --stack-name dhuaan --query "Stacks[0].Outputs[?OutputKey=='$1'].OutputValue" --output text; }
 export VITE_DATA_URL="$(out DataUrl)/latest"
 export VITE_API_URL="$(out ApiUrl)"
-export VITE_TG_BOT="${VITE_TG_BOT:-}"
+export VITE_TG_BOT="${VITE_TG_BOT:-DhuaanSmokeBot}"
 npm run build
 (cd dist && rm -f ../dist.zip && zip -qr ../dist.zip .)
 ID_FILE=../scripts/amplify-app-id

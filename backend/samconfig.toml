@@ -7,3 +7,4 @@ s3_prefix = "dhuaan"
 capabilities = "CAPABILITY_IAM"
 confirm_changeset = false
 fail_on_empty_changeset = false
+parameter_overrides = "SiteUrl=https://main.d300fn6sn0z3go.amplifyapp.com EnableCdn=false"
