@@ -1,0 +1,22 @@
+@import "tailwindcss";
+@import "maplibre-gl/dist/maplibre-gl.css";
+
+@theme {
+  --color-ink: #0B0F14;
+  --color-panel: #121821;
+  --color-line: #233041;
+  --color-fire: #F97316;
+  --color-smoke-light: #A3A3A3;
+  --color-smoke-mod: #8B5CF6;
+  --color-smoke-heavy: #6D28D9;
+  --color-ok: #22C55E;
+  --font-sans: "Inter", "Noto Sans Devanagari", system-ui, sans-serif;
+}
+
+html, body, #root { height: 100%; }
+body { margin: 0; background: var(--color-ink); color: #E5E7EB; font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+:lang(hi) { font-family: "Noto Sans Devanagari", "Inter", sans-serif; }
+button, a, input { -webkit-tap-highlight-color: transparent; }
+.maplibregl-ctrl-attrib { font-size: 10px; background: rgba(11,15,20,.7) !important; color: #9CA3AF; }
+.maplibregl-ctrl-attrib a { color: #9CA3AF; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
