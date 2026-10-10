@@ -4,7 +4,7 @@ import { useT } from '../lib/i18n'
 export default function Header() {
   const { t, lang, setLang } = useT()
   const link = ({ isActive }: { isActive: boolean }) =>
-    `px-2.5 py-1.5 rounded-md text-sm ${isActive ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white'}`
+    `px-2 py-1.5 rounded-md text-sm whitespace-nowrap ${isActive ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white'}`
   return (
     <header className="relative z-20 flex items-center justify-between gap-2 border-b border-line bg-ink/95 px-3 py-2 backdrop-blur">
       <NavLink to="/" className="flex items-baseline gap-2">

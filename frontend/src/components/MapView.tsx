@@ -89,6 +89,8 @@ export default function MapView({ bundle, frames, time, lang, selected, onPick }
   const images = useMemo(() => frameImages(bundle, frames), [bundle, frames])
   const pickRef = useRef(onPick)
   pickRef.current = onPick
+  const selectedRef = useRef(selected)
+  selectedRef.current = selected
   const frameIdx = Math.max(0, Math.min(bundle.smoke.times.length - 1, Math.round((time - bundle.smoke.times[0]) / 3600)))
 
   useEffect(() => {
@@ -98,6 +100,8 @@ export default function MapView({ bundle, frames, time, lang, selected, onPick }
       attributionControl: { compact: true }, dragRotate: false, pitchWithRotate: false,
     })
     m.touchZoomRotate.disableRotation()
+    // on phones the bottom sheet covers the lower half: keep the map's focus above it
+    if (window.innerWidth < 768) m.setPadding({ top: 40, bottom: Math.round(window.innerHeight * 0.42), left: 0, right: 0 })
     map.current = m
     if (import.meta.env.DEV) (window as unknown as { __map: MLMap }).__map = m
     m.on('load', () => {
@@ -125,6 +129,12 @@ export default function MapView({ bundle, frames, time, lang, selected, onPick }
       m.addLayer({ id: 'selected', type: 'circle', source: 'selected',
         paint: { 'circle-radius': 8, 'circle-color': 'rgba(0,0,0,0)', 'circle-stroke-color': '#F9FAFB', 'circle-stroke-width': 2.5 } })
       ready.current = true
+      const sel = selectedRef.current
+      if (sel) {
+        ;(m.getSource('selected') as GeoJSONSource).setData({ type: 'FeatureCollection', features: [
+          { type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: [sel.lon, sel.lat] } }] })
+        m.easeTo({ center: [sel.lon, sel.lat], zoom: 7, duration: 800 })
+      }
     })
     m.on('click', (e: MapMouseEvent) => pickRef.current(e.lngLat.lat, e.lngLat.lng))
     // the container gets its real size after layout; keep the canvas in sync
