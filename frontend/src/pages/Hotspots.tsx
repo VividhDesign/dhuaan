@@ -5,6 +5,7 @@ import { useT } from '../lib/i18n'
 export default function Hotspots({ bundle }: { bundle: Bundle }) {
   const { lang } = useT()
   const h = bundle.hotspots
+  const replay = bundle.meta.replay ? `&replay=${bundle.meta.replay.date}` : ''
   const copy = () => {
     const txt = h.clusters.slice(0, 10).map(c =>
       `${c.rank}. ${c.label} (${c.state}) · ${c.n_fires} fires · ${c.frp_mw} MW · https://maps.google.com/?q=${c.lat},${c.lon}`).join('\n')
@@ -45,7 +46,7 @@ export default function Hotspots({ bundle }: { bundle: Bundle }) {
                 <td className="p-2">{c.n_fires}</td>
                 <td className="p-2">{c.frp_mw}</td>
                 <td className="p-2">{c.impact_people_hours > 0 ? compact(c.impact_people_hours) : '—'}</td>
-                <td className="p-2"><a className="text-violet-300 underline" href={`/?lat=${c.lat}&lon=${c.lon}`}>map</a></td>
+                <td className="p-2"><a className="text-violet-300 underline" href={`/?lat=${c.lat}&lon=${c.lon}${replay}`}>map</a></td>
               </tr>
             ))}
           </tbody>
