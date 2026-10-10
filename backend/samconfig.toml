@@ -1,0 +1,9 @@
+version = 0.1
+[default.deploy.parameters]
+stack_name = "dhuaan"
+region = "ap-south-1"
+resolve_s3 = true
+s3_prefix = "dhuaan"
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = false
+fail_on_empty_changeset = false

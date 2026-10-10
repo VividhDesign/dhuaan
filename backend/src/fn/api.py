@@ -16,6 +16,7 @@ from engine.point import cell_id, forecast_at
 from engine.run import default_params
 from fn import subscribers, telegram
 from fn.alerts import hotspot_brief, load_latest, place_name
+from fn.common import BUCKET, s3
 
 logger = Logger()
 app = APIGatewayHttpResolver()
@@ -43,6 +44,24 @@ def geocode(q: str, n: int = 5) -> list[dict]:
 
 def bad(msg: str, code: int = 400):
     return Response(status_code=code, content_type="application/json", body=json.dumps({"error": msg}))
+
+
+DATA_FILES = {"meta.json", "fires.geojson", "trails.json", "smoke.json", "places.json", "hotspots.json",
+              "advice.json", "bulletin.json"}
+
+
+@app.get("/data/latest/<name>")
+def data(name: str):
+    """Published forecast files (used when CloudFront isn't enabled)."""
+    if name not in DATA_FILES:
+        return bad("not found", 404)
+    try:
+        obj = s3().get_object(Bucket=BUCKET, Key=f"public/latest/{name}")
+    except s3().exceptions.NoSuchKey:
+        return bad("not published yet", 404)
+    return Response(status_code=200, content_type="application/json; charset=utf-8",
+                    body=obj["Body"].read().decode("utf-8"),
+                    headers={"Cache-Control": "public, max-age=60", "Access-Control-Allow-Origin": "*"})
 
 
 @app.get("/api/places")

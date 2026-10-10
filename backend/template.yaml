@@ -7,6 +7,14 @@ Parameters:
     Type: String
     Default: ""
     Description: Public URL of the web app (used for links in alerts)
+  EnableCdn:
+    Type: String
+    Default: "false"
+    AllowedValues: ["true", "false"]
+    Description: Serve forecast data through CloudFront (needs a verified AWS account); otherwise via the HTTP API
+
+Conditions:
+  UseCdn: !Equals [!Ref EnableCdn, "true"]
 
 Globals:
   Function:
@@ -66,6 +74,7 @@ Resources:
   # ---------- public data via CloudFront ----------
   DataOAC:
     Type: AWS::CloudFront::OriginAccessControl
+    Condition: UseCdn
     Properties:
       OriginAccessControlConfig:
         Name: !Sub "${AWS::StackName}-data-oac"
@@ -75,6 +84,7 @@ Resources:
 
   DataCdn:
     Type: AWS::CloudFront::Distribution
+    Condition: UseCdn
     Properties:
       DistributionConfig:
         Enabled: true
@@ -97,6 +107,7 @@ Resources:
 
   DataBucketPolicy:
     Type: AWS::S3::BucketPolicy
+    Condition: UseCdn
     Properties:
       Bucket: !Ref DataBucket
       PolicyDocument:
@@ -243,6 +254,9 @@ Resources:
         RunNow:
           Type: HttpApi
           Properties: { ApiId: !Ref HttpApi, Path: /api/run, Method: POST }
+        Data:
+          Type: HttpApi
+          Properties: { ApiId: !Ref HttpApi, Path: "/data/latest/{name}", Method: GET }
 
   # ---------- maps ----------
   MapsKey:
@@ -258,7 +272,7 @@ Outputs:
   ApiUrl:
     Value: !Sub "https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com"
   DataUrl:
-    Value: !Sub "https://${DataCdn.DomainName}"
+    Value: !If [UseCdn, !Sub "https://${DataCdn.DomainName}", !Sub "https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com/data"]
   PipelineArn:
     Value: !Ref Pipeline
   BucketName:
