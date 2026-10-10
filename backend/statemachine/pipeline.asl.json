@@ -34,6 +34,14 @@
       "ResultSelector": {"summary.$": "$.Payload"},
       "ResultPath": "$.model",
       "Retry": [{"ErrorEquals": ["Lambda.ServiceException", "Lambda.TooManyRequestsException"], "IntervalSeconds": 10, "MaxAttempts": 2}],
+      "Next": "Bulletin"
+    },
+    "Bulletin": {
+      "Type": "Task", "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {"FunctionName": "${BulletinArn}", "Payload": {}},
+      "ResultSelector": {"summary.$": "$.Payload"},
+      "ResultPath": "$.bulletin",
+      "Catch": [{"ErrorEquals": ["States.ALL"], "ResultPath": "$.bulletin_error", "Next": "Alerts"}],
       "Next": "Alerts"
     },
     "Alerts": {

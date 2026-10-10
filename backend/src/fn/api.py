@@ -221,6 +221,29 @@ def telegram_webhook():
     return {"ok": True}
 
 
+AUDIO_FILES = {"bulletin-hi.mp3", "bulletin-en.mp3"}
+
+
+def audio_response(prefix: str, name: str) -> dict:
+    """Binary MP3 straight from S3 (Telegram and the web player fetch this URL)."""
+    import base64
+    if name not in AUDIO_FILES:
+        return {"statusCode": 404, "body": "not found"}
+    try:
+        body = s3().get_object(Bucket=BUCKET, Key=f"public/{prefix}/{name}")["Body"].read()
+    except s3().exceptions.NoSuchKey:
+        return {"statusCode": 404, "body": "not found"}
+    return {"statusCode": 200, "isBase64Encoded": True, "body": base64.b64encode(body).decode(),
+            "headers": {"Content-Type": "audio/mpeg", "Cache-Control": "public, max-age=60",
+                        "Access-Control-Allow-Origin": "*"}}
+
+
 @logger.inject_lambda_context(log_event=False)
 def handler(event, ctx):
+    path = event.get("rawPath", "")
+    if path.startswith("/data/latest/audio/"):
+        return audio_response("latest", path.rsplit("/", 1)[-1])
+    m = re.match(r"^/data/replay/(\d{4}-\d{2}-\d{2})/audio/([\w.-]+)$", path)
+    if m:
+        return audio_response(f"replay/{m.group(1)}", m.group(2))
     return app.resolve(event, ctx)

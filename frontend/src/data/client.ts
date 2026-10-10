@@ -1,4 +1,4 @@
-import type { Advice, Bundle, FiresGeo, Hotspots, Meta, PlaceForecast, Smoke, Trails } from './types'
+import type { Advice, Bulletin, Bundle, FiresGeo, Hotspots, Meta, PlaceForecast, Smoke, Trails } from './types'
 
 export const DATA_URL = (import.meta.env.VITE_DATA_URL as string | undefined) || '/samples/latest'
 export const API_URL = (import.meta.env.VITE_API_URL as string | undefined) || ''
@@ -26,7 +26,14 @@ export async function loadBundle(replay: string | null = null): Promise<Bundle> 
     get<Smoke>('smoke.json', base), get<PlaceForecast[]>('places.json', base), get<Hotspots>('hotspots.json', base),
     get<Advice>('advice.json', base),
   ])
-  return { meta, fires, trails, smoke, places, hotspots, advice }
+  const bulletin = await get<Bulletin>('bulletin.json', base).catch(() => null)
+  return { meta, fires, trails, smoke, places, hotspots, advice, bulletin }
+}
+
+export function audioUrl(rel?: string | null): string | null {
+  if (!rel) return null
+  if (/^https?:/.test(rel)) return rel
+  return API_URL ? `${API_URL}${rel}` : null
 }
 
 export async function searchPlaces(q: string, local: PlaceForecast[]): Promise<{ label: string; lat: number; lon: number }[]> {

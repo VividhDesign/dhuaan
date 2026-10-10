@@ -57,6 +57,8 @@ export interface Hotspots {
 
 export type Advice = Record<'resident' | 'school' | 'official', Record<Level, { en: string[]; hi: string[] }>>
 
+export interface Bulletin { generated_at: number; en: string; hi: string; audio_hi?: string | null; audio_en?: string | null; affected: string[] }
+
 export interface Bundle {
   meta: Meta
   fires: FiresGeo
@@ -65,4 +67,5 @@ export interface Bundle {
   places: PlaceForecast[]
   hotspots: Hotspots
   advice: Advice
+  bulletin: Bulletin | null
 }

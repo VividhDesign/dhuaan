@@ -3,6 +3,7 @@ import type { Bundle } from '../data/types'
 import MapView from '../components/MapView'
 import AreaCard from '../components/AreaCard'
 import TimeSlider from '../components/TimeSlider'
+import BulletinCard from '../components/BulletinCard'
 import { clock } from '../lib/format'
 import { useT } from '../lib/i18n'
 
@@ -48,7 +49,10 @@ export default function LiveMap({ bundle, frames }: { bundle: Bundle; frames: Ui
         ${sheetOpen ? '' : 'translate-y-[calc(100%-3.25rem)] md:translate-y-0'}`}>
         <button className="mx-auto mb-2 block h-1.5 w-12 rounded-full bg-gray-600 md:hidden" aria-label="Toggle panel"
           onClick={() => setSheetOpen(o => !o)} />
-        <AreaCard bundle={bundle} frames={frames} selected={selected} onSelect={s => { setSelected(s); setSheetOpen(true) }} />
+        <div className="flex flex-col gap-4">
+          <AreaCard bundle={bundle} frames={frames} selected={selected} onSelect={s => { setSelected(s); setSheetOpen(true) }} />
+          <BulletinCard bulletin={bundle.bulletin} />
+        </div>
       </aside>
 
       <div className={`absolute left-3 right-3 z-10 md:left-3 md:right-[400px] md:bottom-3 ${sheetOpen ? 'bottom-[calc(48%+0.5rem)] md:bottom-3' : 'bottom-16'}`}>

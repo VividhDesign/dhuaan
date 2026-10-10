@@ -144,6 +144,17 @@ Resources:
       Policies:
         - S3CrudPolicy: { BucketName: !Ref DataBucket }
 
+  BulletinFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: fn.bulletin.handler
+      Policies:
+        - S3CrudPolicy: { BucketName: !Ref DataBucket }
+        - Statement:
+            - Effect: Allow
+              Action: polly:SynthesizeSpeech
+              Resource: "*"
+
   AlertsFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -190,7 +201,9 @@ Resources:
         FetchWindsArn: !GetAtt FetchWindsFunction.Arn
         ModelArn: !GetAtt ModelFunction.Arn
         AlertsArn: !GetAtt AlertsFunction.Arn
+        BulletinArn: !GetAtt BulletinFunction.Arn
       Policies:
+        - LambdaInvokePolicy: { FunctionName: !Ref BulletinFunction }
         - LambdaInvokePolicy: { FunctionName: !Ref FetchFiresFunction }
         - LambdaInvokePolicy: { FunctionName: !Ref FetchWindsFunction }
         - LambdaInvokePolicy: { FunctionName: !Ref ModelFunction }
@@ -260,6 +273,12 @@ Resources:
         ReplayData:
           Type: HttpApi
           Properties: { ApiId: !Ref HttpApi, Path: "/data/replay/{date}/{name}", Method: GET }
+        Audio:
+          Type: HttpApi
+          Properties: { ApiId: !Ref HttpApi, Path: "/data/latest/audio/{name}", Method: GET }
+        ReplayAudio:
+          Type: HttpApi
+          Properties: { ApiId: !Ref HttpApi, Path: "/data/replay/{date}/audio/{name}", Method: GET }
 
   # ---------- maps ----------
   MapsKey:

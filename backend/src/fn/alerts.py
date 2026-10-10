@@ -5,6 +5,7 @@ import time
 import boto3
 from aws_lambda_powertools import Logger, Metrics
 from aws_lambda_powertools.metrics import MetricUnit
+from aws_lambda_powertools.utilities import parameters
 
 from engine.messages import compose
 from engine.point import decode_frames, forecast_at
@@ -50,6 +51,12 @@ def handler(event, _ctx):
     smoke, places, hot = load_latest()
     frames = decode_frames(smoke)
     now = int(time.time())
+    try:
+        rel = get_json("public/latest/bulletin.json").get("audio_hi")
+        api = parameters.get_parameter("/dhuaan/api_url", max_age=3600)
+        audio_hi = f"{api}{rel}" if rel and api else None
+    except Exception:
+        audio_hi = None
     sent = 0
 
     for sub in subscribers.all_tg():
@@ -70,6 +77,8 @@ def handler(event, _ctx):
                 text = hotspot_brief(hot, lang)
             if text:
                 telegram.send_message(int(sub["chat_id"]), text)
+                if lang == "hi" and audio_hi and mode == "run":
+                    telegram.send_audio(int(sub["chat_id"]), audio_hi, "🔊 धुआँ बुलेटिन")
                 if mode == "run":
                     subscribers.update_tg(int(sub["chat_id"]), last_alert_at=now)
                 sent += 1
